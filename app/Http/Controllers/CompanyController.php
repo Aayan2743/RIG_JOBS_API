@@ -157,8 +157,21 @@ public function approve($id)
 
 
 
-public function reject($id)
+public function reject(Request $request, $id)
 {
+
+
+     $validator = Validator::make($request->all(), [
+            'remark' => 'required|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()->first()
+            ], 422);
+        }
+
     $company = Company::find($id);
 
     if (!$company) {
@@ -168,11 +181,15 @@ public function reject($id)
         ], 404);
     }
 
-    $company->update(['status' => 'rejected']);
+    $company->update([
+        'status' => 'rejected',
+        'remark' => $request->remark, // ✅ SAVE REMARK
+    ]);
 
     return response()->json([
         'success' => true,
-        'message' => 'Company rejected successfully'
+        'message' => 'Company rejected successfully',
+        'data' => $company
     ]);
 }
 

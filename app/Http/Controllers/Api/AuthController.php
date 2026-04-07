@@ -153,7 +153,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials',
-            ], 401);
+            ], 422);
         }
 
         // Generate JWT token manually
@@ -343,7 +343,7 @@ class AuthController extends Controller
     }
 
     // ✅ Allow only admin & employer
-    if (! in_array($user->role, ['admin', 'employeer'])) {
+    if (! in_array($user->role, ['admin'])) {
         return response()->json([
             'success' => false,
             'message' => 'Access denied',
@@ -367,6 +367,94 @@ class AuthController extends Controller
             ], 403);
         }
     }
+
+    // 🔐 Password check
+    if (! Hash::check($request->password, $user->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid credentials',
+        ], 401);
+    }
+
+    // 🎟 JWT Token
+    $token = JWTAuth::fromUser($user);
+
+    return response()->json([
+        'success'    => true,
+        'token'      => $token,
+        'token_type' => 'Bearer',
+        'user'       => $user,
+    ]);
+}
+
+
+    public function company_login(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()->first(),
+        ], 422);
+    }
+
+    $loginField = filter_var($request->username, FILTER_VALIDATE_EMAIL)
+        ? 'email'
+        : 'phone';
+
+    // 👇 Load company also
+    $user = User::with('company')
+        ->where($loginField, $request->username)
+        ->first();
+
+    if (! $user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found',
+        ], 404);
+    }
+
+    // ✅ Allow only admin & employer
+    if (! in_array($user->role, ['employeer'])) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Access denied',
+        ], 403);
+    }
+
+    // 🔥 NEW: Check company approval for employer
+
+    if ($user->role === 'employeer') {
+
+    if (! $user->company) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Company not found',
+        ], 404);
+    }
+
+    // ✅ Check rejected FIRST
+    if ($user->company->status === 'rejected') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Your company is rejected',
+        ], 403);
+    }
+
+    // ✅ Then check pending / not approved
+    if ($user->company->status !== 'approved') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Your company is not approved yet',
+        ], 403);
+    }
+}
+
+
 
     // 🔐 Password check
     if (! Hash::check($request->password, $user->password)) {

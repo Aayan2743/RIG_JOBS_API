@@ -32,7 +32,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            //
+             $table->dropColumn([
+                'tagline',
+                'company_size',
+                'headquarters',
+                'company_email',
+                'compliance_certifications',
+                'culture_values',
+                'benefits_perks',
+                'social_links'
+            ]);
         });
     }
 };

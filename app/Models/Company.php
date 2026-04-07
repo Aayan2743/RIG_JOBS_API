@@ -30,6 +30,8 @@ public function jobs()
     return $this->hasMany(rigjob::class);
 }
 
+
+
 protected $casts = [
     'social_links' => 'array',
     'culture_values' => 'array',
