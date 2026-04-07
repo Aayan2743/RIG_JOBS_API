@@ -156,19 +156,20 @@ Route::prefix('auth')->group(function () {
 
 
  Route::prefix('employeer')->middleware(['api', 'jwt.auth'])->group(function () {
-        Route::prefix('jobs')->group(function () {
 
+        Route::get('/mycompany', [CompanyController::class, 'mycompany']);
+          Route::post('/update-company', [CompanyController::class, 'update_company']);
+        Route::prefix('jobs')->group(function () {
             Route::post('/', [RigJobController::class, 'store']);
             Route::get('/', [RigJobController::class, 'index']);
              Route::get('/dashboard', [RigJobController::class, 'jobDashboard']);
             Route::get('/{id}', [RigJobController::class, 'show']);
-            Route::post('/{id}', [RigJobController::class, 'update']);
+            Route::get('/close/{id}', [RigJobController::class, 'closeJob']);
+            Route::get('/reopen/{id}', [RigJobController::class, 'reopenJob']);
+            // Route::post('/{id}', [RigJobController::class, 'update']);
+            Route::put('/{id}', [RigJobController::class, 'update']);
             Route::delete('/{id}', [RigJobController::class, 'destroy']);
-            Route::get('/toggle-status/{id}', [RigJobController::class, 'toggleStatus']);
-
-
-
-
+            Route::post('/toggle-status/{id}', [RigJobController::class, 'toggleStatus']);
         });
 
         Route::prefix('settings')->group(function () {

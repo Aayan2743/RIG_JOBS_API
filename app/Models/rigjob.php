@@ -26,6 +26,10 @@ protected $casts = [
     // 'requirements' => 'array',
     'skills' => 'array',
     'benefits' => 'array',
+     'dead_line' => 'datetime',
 ];
+
+
+
 
 }

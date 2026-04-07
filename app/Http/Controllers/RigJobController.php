@@ -162,7 +162,7 @@ class RigJobController extends Controller
 
 
 
-    public function update(Request $request, $id)
+    public function update_w(Request $request, $id)
 {
     $job = rigjob::find($id);
 
@@ -242,6 +242,49 @@ class RigJobController extends Controller
         'success' => true,
         'message' => 'Job updated successfully',
         'data' => $job->load(['company', 'category'])
+    ]);
+}
+
+
+public function update(Request $request, $id)
+{
+    $job = rigjob::findOrFail($id);
+
+    // ✅ Validation (recommended)
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'location' => 'required|string',
+        'job_type' => 'required|string',
+        'category_id' => 'required|exists:categories,id',
+    ]);
+
+    // ✅ Update fields
+    $job->title = $request->title;
+    $job->location = $request->location;
+    $job->job_type = $request->job_type;
+    $job->category_id = $request->category_id;
+    $job->experience_level = $request->experience_level;
+    $job->salary_min = $request->salary_min;
+    $job->salary_max = $request->salary_max;
+    $job->description = $request->description;
+    $job->requirements = $request->requirements;
+    $job->responsibilities = $request->responsibilities;
+
+    // ✅ Handle JSON fields
+    $job->skills = $request->skills ?? [];
+    $job->benefits = $request->benefits ?? [];
+
+    // ✅ Date format fix
+    if ($request->dead_line) {
+        $job->dead_line = $request->dead_line;
+    }
+
+    $job->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Job updated successfully',
+        'data' => $job
     ]);
 }
 
@@ -412,6 +455,32 @@ public function toggleStatus($id)
     return response()->json([
         'success' => true,
         'status' => $job->status
+    ]);
+}
+
+public function closeJob($id)
+{
+    $job = rigjob::findOrFail($id);
+
+    $job->status = 'closed';
+    $job->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Job closed successfully'
+    ]);
+}
+
+public function reopenJob($id)
+{
+    $job = rigjob::findOrFail($id);
+
+    $job->status = 'draft'; // back to paused
+    $job->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Job reopened as draft'
     ]);
 }
 

@@ -272,6 +272,27 @@ public function pending($id)
         ]);
     }
 
+
+
+    // mycompany
+
+     public function mycompany()
+    {
+        $company = Company::with('users')->find(auth()->user()->company_id);
+
+        if (!$company) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Company not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $company
+        ]);
+    }
+
     /**
      * ✅ Update Company + User
      */
@@ -377,6 +398,128 @@ public function update(Request $request, $id)
         ]);
 
     } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+public function update_company(Request $request)
+{
+    $company = Company::with('user')->find(auth()->user()->company_id);
+
+    if (!$company) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Company not found'
+        ], 404);
+    }
+
+    // ✅ VALIDATION
+    $validator = Validator::make($request->all(), [
+
+        'company_name'   => 'required|string|max:255',
+        'contact_person' => 'required|string|max:255',
+
+        'email' => 'required|email|unique:users,email,' . optional($company->user)->id,
+
+        'password' => 'nullable|min:6',
+        'founded'  => 'required|string|max:255',
+
+        // ✅ FIXED (use company id)
+        'phone' => 'required|digits:10|unique:companies,phone,' . $company->id,
+
+        'website'     => 'required|url|max:255',
+        'industry_id' => 'required|exists:industries,id',
+        'message'     => 'required|string',
+
+        'tagline'       => 'required|string|max:255',
+        'company_size'  => 'required|string|max:100',
+        'headquarters'  => 'required|string|max:255',
+        'company_email' => 'required|email|max:255',
+
+        // ✅ ARRAY FIELDS
+        'culture_values'   => 'required|array',
+        'culture_values.*' => 'string|max:255',
+
+        'benefits_perks'   => 'required|array',
+        'benefits_perks.*' => 'string|max:255',
+
+        'compliance_certifications' => 'required|string|max:255',
+
+        'social_links'   => 'required|array',
+        'social_links.*' => 'required|url',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()->first() // ✅ full errors
+        ], 422);
+    }
+
+    // ✅ PREVENT NULL ARRAYS
+    $request->merge([
+        'culture_values' => $request->culture_values ?? [],
+        'benefits_perks' => $request->benefits_perks ?? [],
+        'social_links'   => $request->social_links ?? [],
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+
+        // 🏢 UPDATE COMPANY
+        $company->update([
+            'company_name'   => $request->company_name,
+            'contact_person' => $request->contact_person,
+            'phone'          => $request->phone,
+            'website'        => $request->website,
+            'industry_id'    => $request->industry_id,
+            'message'        => $request->message,
+            'founded'        => $request->founded,
+
+            'tagline'        => $request->tagline,
+            'company_size'   => $request->company_size,
+            'headquarters'   => $request->headquarters,
+            'company_email'  => $request->company_email,
+
+            'culture_values' => $request->culture_values,
+            'benefits_perks' => $request->benefits_perks,
+            'social_links'   => $request->social_links,
+            'compliance_certifications'   => $request->compliance_certifications,
+        ]);
+
+        // 👤 UPDATE USER
+        if ($company->user) {
+
+            $userData = [
+                'name'  => $request->contact_person,
+                'email' => $request->email,
+            ];
+
+            if ($request->password) {
+                $userData['password'] = Hash::make($request->password);
+            }
+
+            $company->user->update($userData);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Company updated successfully',
+            'data'    => $company->load(['industry', 'user'])
+        ]);
+
+    } catch (\Exception $e) {
+
         DB::rollBack();
 
         return response()->json([
