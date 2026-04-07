@@ -108,6 +108,7 @@ Route::prefix('auth')->group(function () {
     Route::prefix('company-requests')->group(function () {
 
         Route::get('/', [CompanyController::class, 'requests']); // list + counts
+        Route::get('/approved-companies', [CompanyController::class, 'companyRequests']); // list + counts
 
 
         Route::post('/approve/{id}', [CompanyController::class, 'approve']);
@@ -128,6 +129,7 @@ Route::prefix('auth')->group(function () {
 
         Route::post('/', [RigJobCategoryController::class, 'store']);
         Route::get('/', [RigJobCategoryController::class, 'index']);
+        Route::get('/all', [RigJobCategoryController::class, 'all']);
         Route::get('/{id}', [RigJobCategoryController::class, 'show']);
         Route::post('/{id}', [RigJobCategoryController::class, 'update']);
         Route::delete('/{id}', [RigJobCategoryController::class, 'destroy']);

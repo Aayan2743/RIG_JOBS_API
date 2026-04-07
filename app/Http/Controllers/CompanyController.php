@@ -89,6 +89,42 @@ class CompanyController extends Controller
         ]);
     }
 
+
+    public function companyRequests(Request $request)
+{
+    $query = Company::with(['industry', 'users']);
+
+    // ✅ ONLY APPROVED
+    $query->where('status', 'approved');
+
+    // ✅ SEARCH
+    if ($request->search) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->where('company_name', 'like', "%$search%")
+              ->orWhere('contact_person', 'like', "%$search%")
+              ->orWhereHas('users', function ($uq) use ($search) {
+                  $uq->where('email', 'like', "%$search%");
+              });
+        });
+    }
+
+    // ✅ PAGINATION
+    $companies = $query->latest()->paginate(10);
+
+    return response()->json([
+        'success' => true,
+        'data' => $companies->items(),
+        'pagination' => [
+            'current_page' => $companies->currentPage(),
+            'last_page' => $companies->lastPage(),
+            'per_page' => $companies->perPage(),
+            'total' => $companies->total(),
+        ]
+    ]);
+}
+
     public function requests(Request $request)
 {
     $status  = $request->get('status'); // pending / approved / rejected

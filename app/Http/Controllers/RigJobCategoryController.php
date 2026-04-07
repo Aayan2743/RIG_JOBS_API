@@ -70,6 +70,30 @@ class RigJobCategoryController extends Controller
         ]);
     }
 
+
+   public function all(Request $request)
+{
+    $search = $request->get('search');
+
+    $query = Category::query();
+
+    if (!empty($search)) {
+        $query->where('name', 'like', "%$search%");
+    }
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // ✅ GET ALL DATA (NO PAGINATION)
+    $categories = $query->latest()->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $categories
+    ]);
+}
+
     /**
      * ✅ Get Single Category
      */
