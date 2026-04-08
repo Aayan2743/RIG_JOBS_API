@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\EducationController;
+use App\Http\Controllers\Admin\SpecializationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
@@ -74,30 +78,28 @@ Route::prefix('auth')->group(function () {
     );
 
     Route::get('/message', [OrderController::class, 'sendWhatsappTest']);
-
 });
 
- Route::prefix('companies')->group(function () {
+Route::prefix('companies')->group(function () {
 
-        Route::post('/', [CompanyController::class, 'store']);     // Register
-        Route::get('/get-industry', [IndustryController::class, 'index']);
-        Route::get('/featured-jobs', [RigJobController::class, 'featuredJobs']);
-        Route::get('/industries-with-jobs', [IndustryController::class, 'industriesWithJobs']);
-        Route::get('/top-companies', [RigJobController::class, 'topCompanies']);
-         Route::get('/jobs/{id}', [RigJobController::class, 'show']);
-         Route::get('/jobs', [RigJobController::class, 'jobList']);
-
-
-    });
+    Route::post('/', [CompanyController::class, 'store']);     // Register
+    Route::get('/get-industry', [IndustryController::class, 'index']);
+    Route::get('/featured-jobs', [RigJobController::class, 'featuredJobs']);
+    Route::get('/industries-with-jobs', [IndustryController::class, 'industriesWithJobs']);
+    Route::get('/top-companies', [RigJobController::class, 'topCompanies']);
+    Route::get('/jobs/{id}', [RigJobController::class, 'show']);
+    Route::get('/jobs', [RigJobController::class, 'jobList']);
+});
 
 
- Route::prefix('admin')->middleware(['api', 'jwt.auth'])->group(function () {
+Route::prefix('admin')->middleware(['api', 'jwt.auth'])->group(function () {
 
 
     Route::prefix('industries')->group(function () {
 
         Route::post('/', [IndustryController::class, 'store']);     // Create
         Route::get('/', [IndustryController::class, 'getIndustry']);      // List
+        Route::get('/all', [IndustryController::class, 'getallIndustries']);      // List
         Route::get('/{id}', [IndustryController::class, 'show']);   // Single
         Route::post('/{id}', [IndustryController::class, 'update']); // Update
         Route::delete('/{id}', [IndustryController::class, 'destroy']); // Delete
@@ -114,11 +116,11 @@ Route::prefix('auth')->group(function () {
         Route::post('/approve/{id}', [CompanyController::class, 'approve']);
         Route::post('/reject/{id}', [CompanyController::class, 'reject']);
         Route::post('/pending/{id}', [CompanyController::class, 'pending']);
-
     });
 
 
     Route::prefix('company')->group(function () {
+
         Route::post('/update/{id}', [CompanyController::class, 'update']);
         Route::get('/get/{id}', [CompanyController::class, 'show']);
 
@@ -133,56 +135,98 @@ Route::prefix('auth')->group(function () {
         Route::get('/{id}', [RigJobCategoryController::class, 'show']);
         Route::post('/{id}', [RigJobCategoryController::class, 'update']);
         Route::delete('/{id}', [RigJobCategoryController::class, 'destroy']);
-
     });
 
 
     Route::prefix('jobs')->group(function () {
 
         Route::get('/feature/{id}', [RigJobController::class, 'toggleFeatured']);
+         Route::get('/list-all-jobs', [RigJobController::class, 'list_all_companies_jobs']);
     });
 
+      Route::prefix('education-details')->group(function () {
+
+                 Route::get('/educations', [EducationController::class, 'index']);
+                 Route::get('/educations/all', [EducationController::class, 'all']);
+                Route::post('/educations', [EducationController::class, 'store']);
+                Route::put('/educations/{id}', [EducationController::class, 'update']);
+                Route::delete('/educations/{id}', [EducationController::class, 'destroy']);
+
+                Route::get('/courses', [CourseController::class, 'index']);
+                Route::get('/courses/all', [CourseController::class, 'all']);
+                Route::post('/courses', [CourseController::class, 'store']);
+                Route::post('/courses/{id}', [CourseController::class, 'update']);
+                Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+
+                Route::get('/specializations', [SpecializationController::class, 'index']);
+                Route::get('/specializations/all', [SpecializationController::class, 'all']);
+                Route::post('/specializations', [SpecializationController::class, 'store']);
+                Route::post('/specializations/{id}', [SpecializationController::class, 'update']);
+                Route::delete('/specializations/{id}', [SpecializationController::class, 'destroy']);
+      });
 
 
 
-        // Route::get('/', [CompanyController::class, 'index']);      // List
-        // Route::get('/{id}', [CompanyController::class, 'show']);   // Single
-        // Route::put('/{id}', [CompanyController::class, 'update']); // Update
-        // Route::delete('/{id}', [CompanyController::class, 'destroy']); // Delete
 
 
 
- });
-
-
- Route::prefix('employeer')->middleware(['api', 'jwt.auth'])->group(function () {
-
-        Route::get('/mycompany', [CompanyController::class, 'mycompany']);
-          Route::post('/update-company', [CompanyController::class, 'update_company']);
-        Route::prefix('jobs')->group(function () {
-            Route::post('/', [RigJobController::class, 'store']);
-            Route::get('/', [RigJobController::class, 'index']);
-             Route::get('/dashboard', [RigJobController::class, 'jobDashboard']);
-            Route::get('/{id}', [RigJobController::class, 'show']);
-            Route::get('/close/{id}', [RigJobController::class, 'closeJob']);
-            Route::get('/reopen/{id}', [RigJobController::class, 'reopenJob']);
-            // Route::post('/{id}', [RigJobController::class, 'update']);
-            Route::put('/{id}', [RigJobController::class, 'update']);
-            Route::delete('/{id}', [RigJobController::class, 'destroy']);
-            Route::post('/toggle-status/{id}', [RigJobController::class, 'toggleStatus']);
-        });
-
-        Route::prefix('settings')->group(function () {
-
-         Route::get('/', [AccountController::class, 'getProfile']);
-          Route::post('/', [AccountController::class, 'updateProfile']);
-          Route::post('/change-password', [AccountController::class, 'changePassword']);
+    // Route::get('/', [CompanyController::class, 'index']);      // List
+    // Route::get('/{id}', [CompanyController::class, 'show']);   // Single
+    // Route::put('/{id}', [CompanyController::class, 'update']); // Update
+    // Route::delete('/{id}', [CompanyController::class, 'destroy']); // Delete
 
 
 
-        });
+});
 
- });
+
+Route::prefix('employeer')->middleware(['api', 'jwt.auth'])->group(function () {
+
+    Route::get('/mycompany', [CompanyController::class, 'mycompany']);
+    Route::post('/update-company', [CompanyController::class, 'update_company']);
+    Route::prefix('jobs')->group(function () {
+        Route::post('/', [RigJobController::class, 'store']);
+        Route::get('/', [RigJobController::class, 'index']);
+        Route::get('/dashboard', [RigJobController::class, 'jobDashboard']);
+        Route::get('/{id}', [RigJobController::class, 'show']);
+        Route::get('/close/{id}', [RigJobController::class, 'closeJob']);
+        Route::get('/reopen/{id}', [RigJobController::class, 'reopenJob']);
+        // Route::post('/{id}', [RigJobController::class, 'update']);
+        Route::put('/{id}', [RigJobController::class, 'update']);
+        Route::delete('/{id}', [RigJobController::class, 'destroy']);
+        Route::post('/toggle-status/{id}', [RigJobController::class, 'toggleStatus']);
+    });
+
+    Route::prefix('settings')->group(function () {
+
+        Route::get('/', [AccountController::class, 'getProfile']);
+        Route::post('/', [AccountController::class, 'updateProfile']);
+        Route::post('/change-password', [AccountController::class, 'changePassword']);
+    });
+
+    //employeer/update-company
+
+});
+
+
+Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
+
+    Route::get('/profile', [CandidateProfileController::class, 'index']);
+
+    Route::post('/about', [CandidateProfileController::class, 'saveAbout']);
+    Route::post('/skills', [CandidateProfileController::class, 'saveSkills']);
+
+    Route::get('/experiences', [CandidateProfileController::class, 'experiences']);
+    Route::post('/experience', [CandidateProfileController::class, 'storeExperience']);
+    Route::put('/experience/{id}', [CandidateProfileController::class, 'updateExperience']);
+    Route::delete('/experience/{id}', [CandidateProfileController::class, 'deleteExperience']);
+
+    Route::post('/certification', [CandidateProfileController::class, 'storeCertification']);
+    Route::delete('/certification/{id}', [CandidateProfileController::class, 'deleteCertification']);
+
+});
+
+
 
 
 // Route::prefix('admin-dashboard')->middleware(['api', 'jwt.auth'])->group(function () {
