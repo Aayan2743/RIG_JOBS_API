@@ -31,6 +31,8 @@ class Candidate extends Model
         return $this->hasMany(CandidateCertification::class);
     }
 
+
+
     public function resumes()
     {
         return $this->hasMany(CandidateResume::class);

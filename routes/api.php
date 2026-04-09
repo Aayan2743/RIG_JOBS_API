@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SpecializationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CandidateEducationController;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
@@ -226,6 +227,18 @@ Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
 
     Route::post('/certification', [CandidateProfileController::class, 'storeCertification']);
     Route::delete('/certification/{id}', [CandidateProfileController::class, 'deleteCertification']);
+    Route::put('/certification/{id}', [CandidateProfileController::class, 'updateCertification']);
+
+
+
+    Route::get('/educations', [CandidateEducationController::class, 'index']);
+    Route::post('/education', [CandidateEducationController::class, 'store']);
+    Route::put('/education/{id}', [CandidateEducationController::class, 'update']);
+    Route::delete('/education/{id}', [CandidateEducationController::class, 'destroy']);
+
+    Route::post('/resume', [CandidateProfileController::class, 'uploadResume']);
+        Route::get('/resume/{id}/download', [CandidateProfileController::class, 'downloadResume']);
+        Route::delete('/resume/{id}', [CandidateProfileController::class, 'deleteResume']);
 
 });
 

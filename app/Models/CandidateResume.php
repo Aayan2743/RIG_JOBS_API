@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class CandidateResume extends Model
 {
-    protected $fillable = ['candidate_id', 'file', 'file_name'];
+    protected $fillable = ['candidate_id', 'file_path', 'file_name'];
 }

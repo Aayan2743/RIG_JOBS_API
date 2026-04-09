@@ -5,31 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CandidateProfileController extends Controller
 {
-     public function indexsssss(Request $request)
-    {
-        $perPage = $request->get('per_page', 10);
 
 
 
-        $candidate = Candidate::with([
-            'skills',
-            'experiences',
-            'educations',
-            'certifications',
-            'resumes'
-        ])->where('user_id', auth()->id())->first();
-
-        return response()->json([
-            'success' => true,
-            'data' => $candidate
-        ]);
-    }
-
-
-    public function index(Request $request)
+    public function index1111(Request $request)
 {
     $candidate = Candidate::with([
         'skills',
@@ -65,6 +48,57 @@ class CandidateProfileController extends Controller
             $exp->current = $exp->is_current ? "yes" : "no";
 
             return $exp;
+        });
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $candidate
+    ]);
+}
+
+
+public function index(Request $request)
+{
+    $candidate = Candidate::with([
+        'skills',
+        'experiences',
+        'educations.education',
+        'educations.course',
+        'educations.specialization',
+        'certifications',
+        'resumes'
+    ])->where('user_id', auth()->id())->first();
+
+    // 🔥 EXPERIENCE TRANSFORM (same as yours)
+    if ($candidate && $candidate->experiences) {
+        $candidate->experiences->transform(function ($exp) {
+
+            if ($exp->start_date) {
+                $exp->start_year = date('Y', strtotime($exp->start_date));
+                $exp->start_month = date('n', strtotime($exp->start_date));
+            }
+
+            if ($exp->end_date) {
+                $exp->end_year = date('Y', strtotime($exp->end_date));
+                $exp->end_month = date('n', strtotime($exp->end_date));
+            }
+
+            $exp->current = $exp->is_current ? "yes" : "no";
+
+            return $exp;
+        });
+    }
+
+    // 🔥 EDUCATION TRANSFORM (NEW)
+    if ($candidate && $candidate->educations) {
+        $candidate->educations->transform(function ($edu) {
+
+            $edu->education_name = $edu->education->name ?? null;
+            $edu->course_name = $edu->course->name ?? null;
+            $edu->specialization_name = $edu->specialization->name ?? null;
+
+            return $edu;
         });
     }
 
@@ -359,5 +393,120 @@ $exp = $candidate->experiences()->create([
         $cert->delete();
 
         return response()->json(['success' => true]);
+    }
+
+
+    public function updateCertification(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => $validator->errors()->first()
+        ], 422);
+    }
+
+    $candidate = Candidate::where('user_id', auth()->id())->firstOrFail();
+
+    $cert = $candidate->certifications()->find($id);
+
+    if (!$cert) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Certification not found'
+        ], 404);
+    }
+
+    $cert->update([
+        'name' => $request->name
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'data' => $cert
+    ]);
+    }
+
+
+    public function uploadResume(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'resume' => 'required|file|mimes:pdf,doc,docx|max:2048'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => $validator->errors()->first()
+        ], 422);
+    }
+
+    $candidate = Candidate::firstOrCreate([
+        'user_id' => auth()->id()
+    ]);
+
+    $file = $request->file('resume');
+
+    $path = $file->store('resumes', 'public');
+
+    $resume = $candidate->resumes()->create([
+        'file_path' => $path,
+        'file_name' => $file->getClientOriginalName()
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'data' => $resume
+    ]);
+    }
+
+    public function downloadResume($id)
+{
+    $candidate = Candidate::where('user_id', auth()->id())->firstOrFail();
+
+    $resume = $candidate->resumes()->find($id);
+
+    if (!$resume) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Resume not found'
+        ], 404);
+    }
+
+    $path = storage_path('app/public/' . $resume->file_path);
+
+    if (!file_exists($path)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'File not found'
+        ], 404);
+    }
+
+    return response()->download($path, $resume->file_name);
+    }
+
+    public function deleteResume($id)
+{
+    $candidate = Candidate::where('user_id', auth()->id())->firstOrFail();
+
+    $resume = $candidate->resumes()->find($id);
+
+    if (!$resume) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Resume not found'
+        ], 404);
+    }
+
+    Storage::disk('public')->delete($resume->file_path);
+
+    $resume->delete();
+
+    return response()->json([
+        'success' => true
+    ]);
     }
 }

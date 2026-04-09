@@ -19,4 +19,20 @@ class CandidateEducation extends Model
         'course_type',
         'grading_system'
     ];
+
+
+    public function education()
+{
+    return $this->belongsTo(Education::class, 'education_id');
+}
+
+public function course()
+{
+    return $this->belongsTo(Course::class, 'course_id');
+}
+
+public function specialization()
+{
+    return $this->belongsTo(Specialization::class, 'specialization_id');
+}
 }
