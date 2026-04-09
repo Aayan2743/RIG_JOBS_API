@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Candidate extends Model
 {
-    protected $fillable = ['user_id', 'about', 'phone', 'location'];
+
+    public $table = 'candidates';
+
+    protected $fillable = ['user_id', 'about', 'phone', 'job_type'];
 
     public function skills()
     {
@@ -15,12 +18,12 @@ class Candidate extends Model
 
     public function experiences()
     {
-        return $this->hasMany(CandidateExperience::class);
+        return $this->hasMany(CandidateExperience::class,'candidate_id');
     }
 
     public function educations()
     {
-        return $this->hasMany(CandidateEducation::class);
+        return $this->hasMany(CandidateEducation::class,'candidate_id');
     }
 
     public function certifications()

@@ -214,6 +214,9 @@ Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
     Route::get('/profile', [CandidateProfileController::class, 'index']);
 
     Route::post('/about', [CandidateProfileController::class, 'saveAbout']);
+    // Route::get('/about', [CandidateProfileController::class, 'saveAbout']);
+
+
     Route::post('/skills', [CandidateProfileController::class, 'saveSkills']);
 
     Route::get('/experiences', [CandidateProfileController::class, 'experiences']);

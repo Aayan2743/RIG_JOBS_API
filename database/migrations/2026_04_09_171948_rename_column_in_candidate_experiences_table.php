@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('educations', function (Blueprint $table) {
-            $table->id();
-             $table->string('name');
-             $table->boolean('status')->default(1);
-            $table->timestamps();
+        Schema::table('candidate_experiences', function (Blueprint $table) {
+             $table->renameColumn('location', 'job_type');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('educations');
+        Schema::table('candidate_experiences', function (Blueprint $table) {
+             $table->renameColumn('location', 'job_type');
+        });
     }
 };

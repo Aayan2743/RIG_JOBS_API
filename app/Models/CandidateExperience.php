@@ -14,6 +14,7 @@ class CandidateExperience extends Model
         'description',
         'start_date',
         'end_date',
-        'is_current'
+        'is_current',
+        'job_type',
     ];
 }
