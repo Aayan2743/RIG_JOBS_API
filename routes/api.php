@@ -81,6 +81,8 @@ Route::prefix('auth')->group(function () {
     Route::get('/message', [OrderController::class, 'sendWhatsappTest']);
 });
 
+   Route::get('/candidate/resume/{id}/view', [CandidateProfileController::class, 'viewResume']);
+
 Route::prefix('companies')->group(function () {
 
     Route::post('/', [CompanyController::class, 'store']);     // Register
@@ -215,6 +217,8 @@ Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
     Route::get('/profile', [CandidateProfileController::class, 'index']);
 
     Route::post('/about', [CandidateProfileController::class, 'saveAbout']);
+    Route::post('/profile/update', [CandidateProfileController::class, 'updateProfile']);
+    Route::post('/profile/image', [CandidateProfileController::class, 'uploadImage']);
     // Route::get('/about', [CandidateProfileController::class, 'saveAbout']);
 
 
@@ -239,6 +243,7 @@ Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
     Route::post('/resume', [CandidateProfileController::class, 'uploadResume']);
         Route::get('/resume/{id}/download', [CandidateProfileController::class, 'downloadResume']);
         Route::delete('/resume/{id}', [CandidateProfileController::class, 'deleteResume']);
+        Route::get('/candidate/resume/{id}/view', [CandidateProfileController::class, 'viewResume']);
 
 });
 

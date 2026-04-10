@@ -9,7 +9,7 @@ class Candidate extends Model
 
     public $table = 'candidates';
 
-    protected $fillable = ['user_id', 'about', 'phone', 'job_type'];
+    protected $fillable = ['user_id', 'about', 'phone', 'job_type','profile_pic','location'];
 
     public function skills()
     {
@@ -37,4 +37,9 @@ class Candidate extends Model
     {
         return $this->hasMany(CandidateResume::class);
     }
+
+    public function resume()
+{
+    return $this->hasOne(CandidateResume::class);
+}
 }
