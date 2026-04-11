@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Industry;
 use Illuminate\Http\Request;
 
 use App\Models\rigjob;
@@ -160,6 +161,126 @@ class RigJobController extends Controller
      * ✅ Update Job
      */
 
+
+
+
+
+
+public function getByIndustry(Request $request, $slug)
+{
+    $industry = Industry::where('slug', $slug)->first();
+
+    if (!$industry) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Industry not found'
+        ], 404);
+    }
+
+    $query = rigjob::with(['company', 'category'])
+        ->where('status', 'published')
+        ->whereHas('company', function ($q) use ($industry) {
+            $q->where('industry_id', $industry->id);
+        });
+
+    // ✅ APPLY FILTER ONLY IF EXISTS
+
+    if ($request->filled('job_type')) {
+        $query->where('job_type', $request->job_type);
+    }
+
+    if ($request->filled('category')) {
+        $query->whereHas('category', function ($q) use ($request) {
+            $q->where('name', $request->category);
+        });
+    }
+
+    if ($request->filled('location')) {
+        $query->where('location', 'like', '%' . $request->location . '%');
+    }
+
+    if ($request->filled('search')) {
+        $query->where('title', 'like', '%' . $request->search . '%');
+    }
+
+    // 🔥 NEW FILTER
+if ($request->filled('experience_level')) {
+    $query->where('experience_level', $request->experience_level);
+}
+
+    // ✅ PAGINATION
+    $perPage = $request->get('per_page', 10);
+    $jobs = $query->latest()->paginate($perPage);
+
+    // ✅ FORMAT
+    // $data = collect($jobs->items())->map(function ($job) {
+    //     return [
+    //         'id' => $job->id,
+    //         'title' => $job->title,
+    //         'company_name' => $job->company->company_name ?? null,
+    //         'location' => $job->location,
+    //         'job_type' => $job->job_type,
+    //         'salary' => $job->salary,
+    //         'category' => $job->category->name ?? null,
+    //         'posted' => $job->created_at->diffForHumans(),
+    //         'image' => $job->company && $job->company->image
+    //             ? asset('storage/' . $job->company->image)
+    //             : null,
+    //         'apply_url' => url('/jobs/' . $job->id)
+    //     ];
+    // });
+
+    $data = collect($jobs->items())->map(fn($job) => $this->formatJob($job));
+
+    return response()->json([
+        'success' => true,
+        'industry' => $industry->name,
+        'data' => $data,
+        'pagination' => [
+            'current_page' => $jobs->currentPage(),
+            'last_page' => $jobs->lastPage(),
+            'per_page' => $jobs->perPage(),
+            'total' => $jobs->total(),
+        ]
+    ]);
+}
+
+
+
+private function formatJob($job)
+{
+    return [
+        'id' => $job->id,
+        'title' => $job->title,
+        'company_name' => $job->company->company_name ?? null,
+        'location' => $job->location,
+        'job_type' => $job->job_type,
+
+        // ✅ salary
+        'salary_min' => $job->salary_min,
+        'salary_max' => $job->salary_max,
+        'salary' => ($job->salary_min && $job->salary_max)
+            ? '$' . $job->salary_min . ' - $' . $job->salary_max
+            : null,
+
+        // ✅ category
+        'category' => $job->category->name ?? null,
+
+        // ✅ experience
+        'experience_level' => $job->experience_level,
+
+        // ✅ time
+        'posted' => $job->created_at->diffForHumans(),
+
+        // ✅ image
+        'image' => $job->company && $job->company->image
+            ? asset('storage/' . $job->company->image)
+            : null,
+
+        // ✅ apply
+        'apply_url' => url('/jobs/' . $job->id)
+    ];
+}
 
 
         public function update_w(Request $request, $id)
@@ -614,19 +735,22 @@ class RigJobController extends Controller
         $jobs = $query->paginate(10);
 
         // 🔥 Format for UI
-        $data = $jobs->map(function ($job) {
-            return [
-                'id' => $job->id,
-                'title' => $job->title,
-                'company_name' => $job->company->company_name ?? '',
-                'location' => $job->location,
-                'job_type' => $job->job_type,
-                'salary' => '$' . $job->salary_min . ' - $' . $job->salary_max,
-                'experience' => $job->experience_level,
-                'posted' => $job->created_at->diffForHumans(),
-                'is_featured' => $job->is_featured,
-            ];
-        });
+        // $data = $jobs->map(function ($job) {
+        //     return [
+        //         'id' => $job->id,
+        //         'title' => $job->title,
+        //         'company_name' => $job->company->company_name ?? '',
+        //         'location' => $job->location,
+        //         'job_type' => $job->job_type,
+        //         'salary' => '$' . $job->salary_min . ' - $' . $job->salary_max,
+        //         'experience' => $job->experience_level,
+        //         'posted' => $job->created_at->diffForHumans(),
+        //         'is_featured' => $job->is_featured,
+        //     ];
+        // });
+
+
+        $data = collect($jobs->items())->map(fn($job) => $this->formatJob($job));
 
         return response()->json([
             'success' => true,

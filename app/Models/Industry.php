@@ -9,7 +9,8 @@ class Industry extends Model
      protected $fillable = [
         'name',
         'slug',
-        'status'
+        'status',
+        'image',
     ];
 
         public function companies()
