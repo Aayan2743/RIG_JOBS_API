@@ -94,6 +94,8 @@ Route::prefix('companies')->group(function () {
     Route::get('/jobs', [RigJobController::class, 'jobList']);
     // Route::get('/jobs/category/{slug}', [RigJobController::class, 'getByCategory']);
     Route::get('/jobs/industry/{slug}', [RigJobController::class, 'getByIndustry']);
+
+    Route::get('/{slug}', [CompanyController::class, 'showBySlug']);
 });
 
 

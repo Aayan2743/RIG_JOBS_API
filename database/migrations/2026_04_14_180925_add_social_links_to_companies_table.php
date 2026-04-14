@@ -12,12 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-              $table->string('slug')->unique()->nullable();
-                 $table->string('logo')->nullable();
-                $table->string('linkedin')->nullable();
-                $table->string('twitter')->nullable();
-                $table->string('youtube')->nullable();
-                $table->string('facebook')->nullable();
+            //
         });
     }
 
@@ -27,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            $table->dropColumn(['slug', 'linkedin', 'twitter', 'youtube', 'facebook']);
+            //
         });
     }
 };

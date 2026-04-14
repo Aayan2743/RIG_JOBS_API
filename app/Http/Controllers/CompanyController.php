@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class CompanyController extends Controller
 {
@@ -287,6 +288,11 @@ public function pending($id)
             ], 404);
         }
 
+           $company->logo = $company->logo
+        ? asset('storage/' . $company->logo)
+        : null;
+
+
         return response()->json([
             'success' => true,
             'data' => $company
@@ -423,6 +429,13 @@ public function update_company(Request $request)
     // ✅ VALIDATION
     $validator = Validator::make($request->all(), [
 
+
+         'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'linkedin' => 'nullable|url',
+        'twitter' => 'nullable|url',
+        'facebook' => 'nullable|url',
+        'youtube' => 'nullable|url',
+
         'company_name'   => 'required|string|max:255',
         'contact_person' => 'required|string|max:255',
 
@@ -452,8 +465,6 @@ public function update_company(Request $request)
 
         'compliance_certifications' => 'required|string|max:255',
 
-        'social_links'   => 'required|array',
-        'social_links.*' => 'required|url',
     ]);
 
     if ($validator->fails()) {
@@ -471,6 +482,33 @@ public function update_company(Request $request)
     ]);
 
     DB::beginTransaction();
+
+
+    $logoPath = $company->logo ?? null;
+
+if ($request->hasFile('logo')) {
+
+    // delete old
+    if ($company->logo && file_exists(public_path('storage/' . $company->logo))) {
+        unlink(public_path('storage/' . $company->logo));
+    }
+
+    $file = $request->file('logo');
+
+    $filename = 'company_' . time() . '_' . Str::random(6) . '.webp';
+
+    $dest = public_path('storage/company/' . $filename);
+
+    \App\Services\WebpService::convert(
+        $file->getPathname(),
+        $dest,
+        70,
+        200,
+        200
+    );
+
+    $logoPath = 'company/' . $filename;
+}
 
     try {
 
@@ -491,7 +529,15 @@ public function update_company(Request $request)
 
             'culture_values' => $request->culture_values,
             'benefits_perks' => $request->benefits_perks,
-            'social_links'   => $request->social_links,
+
+
+            'logo'     => $logoPath,
+'linkedin' => $request->linkedin,
+'twitter'  => $request->twitter,
+'facebook' => $request->facebook,
+'youtube'  => $request->youtube,
+
+
             'compliance_certifications'   => $request->compliance_certifications,
         ]);
 
@@ -569,4 +615,65 @@ public function update_company(Request $request)
             ], 500);
         }
     }
+
+
+    public function showBySlug($slug)
+{
+    $company = Company::with(['industry', 'jobs'])
+        ->where('slug', $slug)
+        ->first();
+
+    if (!$company) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Company not found'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $company->id,
+            'company_name' => $company->company_name,
+            'slug' => $company->slug,
+            'tagline' => $company->tagline,
+            'website' => $company->website,
+            'headquarters' => $company->headquarters,
+            'company_size' => $company->company_size,
+            'founded' => $company->founded,
+            'message' => $company->message,
+
+            // ✅ IMAGE FULL URL
+            'logo' => $company->logo
+                ? asset('storage/' . $company->logo)
+                : null,
+
+            // ✅ SOCIAL LINKS
+            'linkedin' => $company->linkedin,
+            'twitter' => $company->twitter,
+            'facebook' => $company->facebook,
+            'youtube' => $company->youtube,
+
+            // ✅ ARRAYS
+            'culture_values' => $company->culture_values ?? [],
+            'benefits_perks' => $company->benefits_perks ?? [],
+
+            // ✅ INDUSTRY
+            'industry' => $company->industry ? $company->industry->name : null,
+
+            // ✅ JOB COUNT
+            'jobs_count' => $company->jobs->count(),
+
+            // ✅ JOB LIST (optional)
+            'jobs' => $company->jobs->map(function ($job) {
+                return [
+                    'id' => $job->id,
+                    'title' => $job->title,
+                    'location' => $job->location,
+                    'job_type' => $job->job_type,
+                ];
+            }),
+        ]
+    ]);
+}
 }

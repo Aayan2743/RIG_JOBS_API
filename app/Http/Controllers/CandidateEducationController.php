@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
-use Validator;
+
 use App\Models\Candidate;
 use App\Models\CandidateEducation;
-
-
+use Illuminate\Support\Facades\Validator;
 
 class CandidateEducationController extends Controller
 {

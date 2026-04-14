@@ -43,14 +43,35 @@ protected $casts = [
 ];
 
 
+
+
+
+
 protected static function boot()
 {
     parent::boot();
 
+    // ✅ CREATE
     static::creating(function ($company) {
         $slug = Str::slug($company->company_name);
         $count = Company::where('slug', 'LIKE', "{$slug}%")->count();
         $company->slug = $count ? "{$slug}-{$count}" : $slug;
+    });
+
+    // ✅ UPDATE (🔥 THIS WAS MISSING)
+    static::updating(function ($company) {
+
+        // only update if name changed
+        if ($company->isDirty('company_name')) {
+
+            $slug = Str::slug($company->company_name);
+
+            $count = Company::where('slug', 'LIKE', "{$slug}%")
+                ->where('id', '!=', $company->id)
+                ->count();
+
+            $company->slug = $count ? "{$slug}-{$count}" : $slug;
+        }
     });
 }
 
