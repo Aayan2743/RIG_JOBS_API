@@ -140,22 +140,36 @@ class RigJobController extends Controller
     /**
      * ✅ Get Single Job
      */
+
+
+
     public function show($id)
-    {
-        $job = rigjob::with(['company', 'category'])->find($id);
+{
+    $job = rigjob::with(['company.industry', 'category'])->find($id);
 
-        if (!$job) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Job not found'
-            ], 404);
-        }
-
+    if (!$job) {
         return response()->json([
-            'success' => true,
-            'data' => $job
-        ]);
+            'success' => false,
+            'message' => 'Job not found'
+        ], 404);
     }
+
+    // Get similar jobs (by category, exclude current job)
+    $similarJobs = rigjob::with(['company.industry', 'category'])
+        ->where('category_id', $job->category_id)
+        ->where('id', '!=', $job->id)
+        ->latest()
+        ->take(5)
+        ->get();
+
+    // Attach similar jobs inside same structure
+    $job->similar_jobs = $similarJobs;
+
+    return response()->json([
+        'success' => true,
+        'data' => $job
+    ]);
+}
 
     /**
      * ✅ Update Job
