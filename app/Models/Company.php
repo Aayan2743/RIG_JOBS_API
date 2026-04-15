@@ -35,6 +35,13 @@ public function jobs()
 }
 
 
+public function published_jobs()
+{
+    return $this->hasMany(rigjob::class)
+                ->where('status', 'published'); // ✅ filter here
+}
+
+
 
 protected $casts = [
     'social_links' => 'array',

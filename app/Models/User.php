@@ -111,4 +111,9 @@ public function company()
     return $this->belongsTo(Company::class);
 }
 
+public function candidate()
+{
+    return $this->hasOne(\App\Models\Candidate::class);
+}
+
 }

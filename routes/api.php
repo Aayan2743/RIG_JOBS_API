@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\EducationController;
 use App\Http\Controllers\Admin\SpecializationController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\ApplyJobCotroller;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CandidateEducationController;
@@ -37,6 +38,8 @@ use App\Http\Controllers\ProductVariationController;
 use App\Http\Controllers\ProductVariationValueController;
 use App\Http\Controllers\RigJobCategoryController;
 use App\Http\Controllers\RigJobController;
+use App\Http\Controllers\RozarpayPaymentController;
+use App\Http\Controllers\SavedJobController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShippingController;
@@ -149,6 +152,8 @@ Route::prefix('admin')->middleware(['api', 'jwt.auth'])->group(function () {
 
         Route::get('/feature/{id}', [RigJobController::class, 'toggleFeatured']);
          Route::get('/list-all-jobs', [RigJobController::class, 'list_all_companies_jobs']);
+         Route::get('/payments', [RozarpayPaymentController::class, 'index']);
+         
     });
 
       Route::prefix('education-details')->group(function () {
@@ -211,6 +216,10 @@ Route::prefix('employeer')->middleware(['api', 'jwt.auth'])->group(function () {
         Route::post('/change-password', [AccountController::class, 'changePassword']);
     });
 
+
+    Route::get('/jobs/{jobId}/applicants', [ApplyJobCotroller::class, 'getApplicants']);
+     Route::post('/applications/update-status', [ApplyJobCotroller::class, 'updateStatus']);
+
     //employeer/update-company
 
 });
@@ -245,9 +254,32 @@ Route::prefix('candidate')->middleware(['api', 'jwt.auth'])->group(function () {
     Route::delete('/education/{id}', [CandidateEducationController::class, 'destroy']);
 
     Route::post('/resume', [CandidateProfileController::class, 'uploadResume']);
-        Route::get('/resume/{id}/download', [CandidateProfileController::class, 'downloadResume']);
-        Route::delete('/resume/{id}', [CandidateProfileController::class, 'deleteResume']);
-        Route::get('/candidate/resume/{id}/view', [CandidateProfileController::class, 'viewResume']);
+    Route::get('/resume/{id}/download', [CandidateProfileController::class, 'downloadResume']);
+    Route::delete('/resume/{id}', [CandidateProfileController::class, 'deleteResume']);
+    Route::get('/candidate/resume/{id}/view', [CandidateProfileController::class, 'viewResume']);
+
+
+    Route::post('/save-job', [SavedJobController::class, 'store']);
+    Route::delete('/remove-job', [SavedJobController::class, 'destroy']);
+    Route::get('/saved-jobs', [SavedJobController::class, 'index']);
+    Route::get('/saved-jobs/check/{id}', [SavedJobController::class, 'check']);
+
+
+
+    Route::post('/razorpay/order', [RozarpayPaymentController::class, 'createOrder']);
+    Route::post('/razorpay/verify', [RozarpayPaymentController::class, 'verify']);
+
+
+    Route::get('/check-payment', [RozarpayPaymentController::class, 'checkPayment']);
+
+
+    Route::post('/apply-job', [ApplyJobCotroller::class, 'applyJob']);
+Route::post('/check-applied', [ApplyJobCotroller::class, 'checkApplied']);
+Route::get('/my-applications', [ApplyJobCotroller::class, 'myApplications']);
+
+
+
+
 
 });
 

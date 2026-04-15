@@ -95,47 +95,55 @@ class RigJobController extends Controller
     /**
      * ✅ Get All Jobs (Pagination + Search)
      */
+    
+
+
     public function index(Request $request)
-    {
-        $perPage = $request->get('per_page', 10);
-        $search  = $request->get('search');
+{
 
-        $query = rigjob::with(['company', 'category']);
 
-        // 🔍 Search
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%$search%")
-                  ->orWhere('location', 'like', "%$search%");
-            });
-        }
+// dd(auth()->user()->company_id);
+    $perPage = $request->get('per_page', 10);
+    $search  = $request->get('search');
 
-        // 🎯 Filter
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
+    $query = rigjob::with(['company', 'category'])
+        ->withCount('applications') // 🔥 applicants_count
+          ->where('company_id', auth()->user()->company_id);
 
-        if ($request->filled('job_type')) {
-            $query->where('job_type', $request->job_type);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $jobs = $query->latest()->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $jobs->items(),
-            'pagination' => [
-                'current_page' => $jobs->currentPage(),
-                'last_page' => $jobs->lastPage(),
-                'per_page' => $jobs->perPage(),
-                'total' => $jobs->total(),
-            ]
-        ]);
+    // 🔍 Search
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%$search%")
+              ->orWhere('location', 'like', "%$search%");
+        });
     }
+
+    // 🎯 Filters
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
+    }
+
+    if ($request->filled('job_type')) {
+        $query->where('job_type', $request->job_type);
+    }
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    $jobs = $query->latest()->paginate($perPage);
+
+    return response()->json([
+        'success' => true,
+        'data' => $jobs->items(),
+        'pagination' => [
+            'current_page' => $jobs->currentPage(),
+            'last_page' => $jobs->lastPage(),
+            'per_page' => $jobs->perPage(),
+            'total' => $jobs->total(),
+        ]
+    ]);
+}
 
     /**
      * ✅ Get Single Job
@@ -681,6 +689,7 @@ private function formatJob($job)
             return [
                 'id' => $company->id,
                 'company_name' => $company->company_name,
+                'slug' => $company->slug,
                 'jobs_count' => $company->jobs_count ?? 0,
             ];
         });
@@ -722,6 +731,12 @@ private function formatJob($job)
         if ($request->job_type) {
             $query->whereIn('job_type', (array) $request->job_type);
         }
+
+        if ($request->company) {
+                    $query->whereHas('company', function ($q) use ($request) {
+                        $q->where('slug', $request->company);
+                    });
+                }
 
         // 🎯 Experience Level
         if ($request->experience_level) {

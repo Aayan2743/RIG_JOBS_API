@@ -21,6 +21,11 @@ public function company()
 }
 
 
+public function applications()
+{
+    return $this->hasMany(\App\Models\JobApplication::class, 'job_id');
+}
+
 
 protected $casts = [
     // 'requirements' => 'array',
@@ -28,7 +33,7 @@ protected $casts = [
     'benefits' => 'array',
      'dead_line' => 'datetime',
 ];
-    
+
 
 
 

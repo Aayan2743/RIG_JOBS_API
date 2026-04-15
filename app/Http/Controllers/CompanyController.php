@@ -619,7 +619,7 @@ if ($request->hasFile('logo')) {
 
     public function showBySlug($slug)
 {
-    $company = Company::with(['industry', 'jobs'])
+    $company = Company::with(['industry', 'published_jobs'])
         ->where('slug', $slug)
         ->first();
 
@@ -629,6 +629,9 @@ if ($request->hasFile('logo')) {
             'message' => 'Company not found'
         ], 404);
     }
+
+
+
 
     return response()->json([
         'success' => true,
@@ -662,10 +665,10 @@ if ($request->hasFile('logo')) {
             'industry' => $company->industry ? $company->industry->name : null,
 
             // ✅ JOB COUNT
-            'jobs_count' => $company->jobs->count(),
+            'jobs_count' => $company->published_jobs->count(),
 
             // ✅ JOB LIST (optional)
-            'jobs' => $company->jobs->map(function ($job) {
+            'jobs' => $company->published_jobs->map(function ($job) {
                 return [
                     'id' => $job->id,
                     'title' => $job->title,
